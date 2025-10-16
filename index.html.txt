@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tử vi cá nhân chính xác - B360</title>
+<style>
+body {
+  font-family: "Segoe UI", sans-serif;
+  background: linear-gradient(to bottom right, #f8e69b, #f4d85d);
+  color: #222;
+  margin: 0;
+  padding: 0;
+  text-align: center;
+}
+.logo {
+  margin-top: 40px;
+}
+.logo-circle {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: conic-gradient(black 0deg 180deg, white 180deg 360deg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: auto;
+  font-size: 36px;
+  font-weight: bold;
+  color: #d4af37;
+  border: 3px solid #000;
+  box-shadow: 0 0 10px rgba(0,0,0,0.4);
+}
+form {
+  margin: 30px auto;
+  width: 90%;
+  max-width: 400px;
+  background: rgba(255,255,255,0.85);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 0 15px rgba(0,0,0,0.3);
+}
+input, select, button {
+  width: 100%;
+  margin: 10px 0;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 16px;
+}
+button {
+  background: #d4af37;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  border: none;
+}
+button:hover {
+  background: #c09b2f;
+}
+.result {
+  margin: 20px auto;
+  width: 90%;
+  max-width: 600px;
+  background: #fff8dc;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.2);
+  text-align: left;
+}
+.share-buttons {
+  text-align: center;
+  margin: 40px 0;
+}
+.share-buttons button {
+  margin: 5px;
+  width: auto;
+  padding: 10px 20px;
+}
+</style>
+</head>
+<body>
+<div class="logo">
+  <div class="logo-circle">B360</div>
+</div>
+
+<form id="formTuVi">
+  <label>Họ và tên:</label>
+  <input type="text" id="hoten" placeholder="Nhập họ tên...">
+  <label>Ngày sinh (Dương lịch):</label>
+  <input type="date" id="ngaysinh">
+  <label>Giờ sinh:</label>
+  <input type="time" id="giosinh">
+  <label>Giới tính:</label>
+  <select id="gioitinh">
+    <option value="Nam">Nam</option>
+    <option value="Nữ">Nữ</option>
+  </select>
+  <button type="button" onclick="xemTuVi()">Xem tử vi</button>
+</form>
+
+<div class="result" id="ketqua"></div>
+
+<div class="share-buttons">
+  <button onclick="shareFacebook()">Chia sẻ Facebook</button>
+  <button onclick="shareZalo()">Chia sẻ Zalo</button>
+  <button onclick="taiPDF()">Tải PDF</button>
+</div>
+
+<script>
+// =======================
+// CHUYỂN ĐỔI NGÀY DƯƠNG → ÂM CHUẨN
+// (Nguồn: Ho Ngoc Duc - chuyển đổi lịch Việt chuẩn xác)
+// =======================
+function jdFromDate(dd, mm, yy) {
+  var a = Math.floor((14 - mm) / 12);
+  var y = yy + 4800 - a;
+  var m = mm + 12 * a - 3;
+  var jd = dd + Math.floor((153 * m + 2) / 5) + 365 * y + 
+    Math.floor(y / 4) - Math.floor(y / 100) + Math.floor(y / 400) - 32045;
+  return jd;
+}
+function jdToDate(jd) {
+  var a, b, c, d, e, m, day, month, year;
+  if (jd > 2299160) {
+    a = jd + 32044;
+    b = Math.floor((4 * a + 3) / 146097);
+    c = a - Math.floor((b * 146097) / 4);
+  } else {
+    b = 0;
+    c = jd + 32082;
+  }
+  d = Math.floor((4 * c + 3) / 1461);
+  e = c - Math.floor((1461 * d) / 4);
+  m = Math.floor((5 * e + 2) / 153);
+  day = e - Math.floor((153 * m + 2) / 5) + 1;
+  month = m + 3 - 12 * Math.floor(m / 10);
+  year = b * 100 + d - 4800 + Math.floor(m / 10);
+  return [day, month, year];
+}
+function getNewMoonDay(k, timeZone) {
+  var T = k / 1236.85;
+  var T2 = T * T;
+  var T3 = T2 * T;
+  var dr = Math.PI / 180;
+  var Jd1 = 2415020.75933 + 29.53058868 * k + 0.0001178 * T2 - 0.000000155 * T3;
+  Jd1 = Jd1 + 0.00033 * Math.sin((166.56 + 132.87 * T - 0.009173 * T2) * dr);
+  var M = 359.2242 + 29.10535608 * k - 0.0000333 * T2 - 0.00000347 * T3;
+  var Mpr = 306.0253 + 385.81691806 * k + 0.0107306 * T2 + 0.00001236 * T3;
+  var F = 21.2964 + 390.67050646 * k - 0.0016528 * T2 - 0.00000239 * T3;
+  var C1 = (0.1734 - 0.000393 * T) * Math.sin(M * dr) + 
+    0.0021 * Math.sin(2 * dr * M) - 0.4068 * Math.sin(Mpr * dr) + 
+    0.0161 * Math.sin(2 * dr * Mpr) - 0.0004 * Math.sin(3 * dr * Mpr) + 
+    0.0104 * Math.sin(2 * dr * F) - 0.0051 * Math.sin(M + Mpr * dr) - 
+    0.0074 * Math.sin(M - Mpr * dr) + 0.0004 * Math.sin(2 * dr * F + M) - 
+    0.0004 * Math.sin(2 * dr * F - M) - 0.0006 * Math.sin(2 * dr * F + Mpr) + 
+    0.0010 * Math.sin(2 * dr * F - Mpr) + 0.0005 * Math.sin(M + 2 * dr * Mpr);
+  var deltat;
+  if (T < -11) deltat = 0.001 + 0.000839 * T + 0.0002261 * T2 - 0.00000845 * T3 - 0.000000081 * T * T3;
+  else deltat = -0.000278 + 0.000265 * T + 0.000262 * T2;
+  var JdNew = Jd1 + C1 - deltat;
+  return Math.floor(JdNew + 0.5 + timeZone / 24);
+}
+function getSunLongitude(jdn, timeZone) {
+  var T = (jdn - 2451545.5 - timeZone / 24) / 36525;
+  var T2 = T * T;
+  var dr = Math.PI / 180;
+  var M = 357.52910 + 35999.05030 * T - 0.0001559 * T2 - 0.00000048 * T * T2;
+  var L0 = 280.46645 + 36000.76983 * T + 0.0003032 * T2;
+  var DL = (1.914600 - 0.004817 * T - 0.000014 * T2) * Math.sin(dr * M);
+  DL = DL + (0.019993 - 0.000101 * T) * Math.sin(dr * 2 * M) + 0.000290 * Math.sin(dr * 3 * M);
+  var L = L0 + DL;
+  var omega = 125.04 - 1934.136 * T;
+  L = L - 0.00569 - 0.00478 * Math.sin(omega * dr);
+  L = L * dr;
+  L = L - 2 * Math.PI * Math.floor(L / (2 * Math.PI));
+  return Math.floor(L / Math.PI * 6);
+}
+function getLunarMonth11(yy, timeZone) {
+  var off = jdFromDate(31, 12, yy) - 2415021;
+  var k = Math.floor(off / 29.530588853);
+  var nm = getNewMoonDay(k, timeZone);
+  var sunLong = getSunLongitude(nm, timeZone);
+  if (sunLong >= 9) nm = getNewMoonDay(k - 1, timeZone);
+  return nm;
+}
+function getLeapMonthOffset(a11, timeZone) {
+  var k = Math.floor((a11 - 2415021.076998695) / 29.530588853 + 0.5);
+  var last, arc = getSunLongitude(getNewMoonDay(k + 1, timeZone), timeZone);
+  var i = 1;
+  do {
+    last = arc;
+    i++;
+    arc = getSunLongitude(getNewMoonDay(k + i, timeZone), timeZone);
+  } while (arc != last && i < 14);
+  return i - 1;
+}
+function convertSolar2Lunar(dd, mm, yy, timeZone) {
+  var dayNumber = jdFromDate(dd, mm, yy);
+  var k = Math.floor((dayNumber - 2415021.076998695) / 29.530588853);
+  var monthStart = getNewMoonDay(k + 1, timeZone);
+  if (monthStart > dayNumber) monthStart = getNewMoonDay(k, timeZone);
+  var a11 = getLunarMonth11(yy, timeZone);
+  var b11 = a11;
+  var lunarYear;
+  if (a11 >= monthStart) {
+    a11 = getLunarMonth11(yy - 1, timeZone);
+    lunarYear = yy;
+  } else {
+    b11 = getLunarMonth11(yy + 1, timeZone);
+    lunarYear = yy + 1;
+  }
+  var lunarDay = dayNumber - monthStart + 1;
+  var diff = Math.floor((monthStart - a11) / 29);
+  var lunarLeap = 0;
+  var lunarMonth = diff + 11;
+  if (b11 - a11 > 365) {
+    var leapMonthDiff = getLeapMonthOffset(a11, timeZone);
+    if (diff >= leapMonthDiff) {
+      lunarMonth = diff + 10;
+      if (diff == leapMonthDiff) lunarLeap = 1;
+    }
+  }
+  if (lunarMonth > 12) {
+    lunarMonth -= 12;
+  }
+  if (lunarMonth >= 11 && diff < 4) {
+    lunarYear -= 1;
+  }
+  return [lunarDay, lunarMonth, lunarYear, lunarLeap];
+}
+
+// =======================
+// HÀM XEM TỬ VI
+// =======================
+function xemTuVi() {
+  const hoten = document.getElementById("hoten").value;
+  const date = document.getElementById("ngaysinh").value;
+  const gio = document.getElementById("giosinh").value;
+  const gt = document.getElementById("gioitinh").value;
+
+  if (!date) {
+    alert("Vui lòng nhập ngày sinh!");
+    return;
+  }
+
+  const [yyyy, mm, dd] = date.split("-").map(Number);
+  const lunar = convertSolar2Lunar(dd, mm, yyyy, 7);
+  const ngayAm = `${String(lunar[0]).padStart(2, "0")}/${String(lunar[1]).padStart(2, "0")}/${lunar[2]}`;
+
+  let menh = "Hải Trung Kim";
+  if (lunar[2] % 5 === 0) menh = "Lộ Bàng Thổ";
+  else if (lunar[2] % 5 === 1) menh = "Kiếm Phong Kim";
+  else if (lunar[2] % 5 === 2) menh = "Trường Lưu Thủy";
+  else if (lunar[2] % 5 === 3) menh = "Tích Lịch Hỏa";
+  else menh = "Tùng Bách Mộc";
+
+  const ketqua = `
+    <h2>Kết quả tử vi cá nhân</h2>
+    <p><b>Họ tên:</b> ${hoten}</p>
+    <p><b>Giới tính:</b> ${gt}</p>
+    <p><b>Ngày sinh Dương lịch:</b> ${dd}/${mm}/${yyyy}</p>
+    <p><b>Ngày sinh Âm lịch:</b> ${ngayAm}</p>
+    <p><b>Mệnh:</b> ${menh}</p>
+    <h3>Luận giải chi tiết</h3>
+    <p><b>Tổng quan:</b> Người mệnh ${menh} có tính cách nổi bật, khả năng thích ứng linh hoạt và hướng đi riêng trong cuộc sống.</p>
+    <p><b>Tương sinh:</b> Mệnh ${menh} tương sinh tốt với Thổ và Thủy, giúp gia tăng tài lộc và vận khí.</p>
+    <p><b>Tương khắc:</b> Nên tránh Hỏa và Mộc để hạn chế xung khắc trong công việc và tình cảm.</p>
+  `;
+  document.getElementById("ketqua").innerHTML = ketqua;
+}
+
+// =======================
+// CHIA SẺ VÀ TẢI FILE
+// =======================
+function shareFacebook() { alert("Chức năng chia sẻ Facebook đang được cập nhật."); }
+function shareZalo() { alert("Chức năng chia sẻ Zalo đang được cập nhật."); }
+function taiPDF() { alert("Chức năng tải PDF đang được cập nhật."); }
+</script>
+</body>
+</html>
